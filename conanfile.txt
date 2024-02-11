@@ -1,0 +1,12 @@
+[requires]
+sdl/2.28.5
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[options]
+sdl/2.28.5:sdl2main=True
+sdl/2.28.5:directx=False
+sdl/2.28.5:opengles=False
+sdl/2.28.5:vulkan=False
