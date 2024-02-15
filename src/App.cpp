@@ -9,9 +9,8 @@ namespace lazyfoo
 {
 
 App::App( const char *title, const int width, const int height )
-    : m_window(nullptr), m_screenSurface(nullptr), m_image(nullptr),
-      m_width(width), m_height(height),
-      m_currentSurface(nullptr)
+    : m_window(nullptr), m_screenSurface(nullptr),
+      m_width(width), m_height(height)
 {
     if ( SDL_Init( SDL_INIT_VIDEO ) < 0 )
     {
@@ -29,47 +28,16 @@ App::App( const char *title, const int width, const int height )
         throw std::runtime_error( ss.str() );
     }
 
-    m_screenSurface = SDL_GetWindowSurface( m_window );
+    m_screenSurface = SDL_GetWindowSurface( m_window );    
 
-    loadMedia();
-
-    m_currentSurface = m_keyPressSurfaces[ KEY_PRESS_SURFACE_DEFAULT ];
-
-    SDL_BlitSurface( m_currentSurface, nullptr, m_screenSurface, nullptr );
-
-    SDL_UpdateWindowSurface( m_window );
+    m_image = loadSurface( "../../assets/stretch.bmp", m_screenSurface->format );
 }
 
 App::~App()
 {    
-    for(SDL_Surface* s: m_keyPressSurfaces)
-    {
-        SDL_FreeSurface( s );
-    }
+    SDL_FreeSurface( m_image );    
     SDL_DestroyWindow( m_window );
     SDL_Quit();
-}
-
-SDL_Surface* App::loadSurface( const char* path )
-{
-    m_image = SDL_LoadBMP( path );
-    if ( !m_image )
-    {
-        std::stringstream ss;
-        ss << "Unable to load image " << path << "! SDL Error: " << SDL_GetError();        
-        throw std::runtime_error( ss.str() );
-    }
-
-    return m_image;
-}
-
-void App::loadMedia()
-{        
-    m_keyPressSurfaces[ KEY_PRESS_SURFACE_DEFAULT ] = loadSurface( "../../assets/press.bmp" );
-    m_keyPressSurfaces[ KEY_PRESS_SURFACE_UP ] = loadSurface( "../../assets/up.bmp" );    
-    m_keyPressSurfaces[ KEY_PRESS_SURFACE_DOWN ] = loadSurface( "../../assets/down.bmp" );    
-    m_keyPressSurfaces[ KEY_PRESS_SURFACE_LEFT ] = loadSurface( "../../assets/left.bmp" );    
-    m_keyPressSurfaces[ KEY_PRESS_SURFACE_RIGHT ] = loadSurface( "../../assets/right.bmp" );        
 }
 
 void App::run()
@@ -82,49 +50,40 @@ void App::run()
         {
             if ( (event.type == SDL_QUIT) || ( event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE ) )
                 quit = true;
-
-            if ( event.type == SDL_KEYDOWN )
-            {
-                switch ( event.key.keysym.sym )
-                {
-                    case SDLK_UP:
-                        m_currentSurface = m_keyPressSurfaces[ KEY_PRESS_SURFACE_UP ];
-                    break;
-
-                    case SDLK_DOWN:
-                        m_currentSurface = m_keyPressSurfaces[ KEY_PRESS_SURFACE_DOWN ];
-                    break;
-
-                    case SDLK_LEFT:
-                        m_currentSurface = m_keyPressSurfaces[ KEY_PRESS_SURFACE_LEFT ];
-                    break;
-
-                    case SDLK_RIGHT:
-                        m_currentSurface = m_keyPressSurfaces[ KEY_PRESS_SURFACE_RIGHT ];
-                    break;                    
-                }
-
-                SDL_BlitSurface( m_currentSurface, nullptr, m_screenSurface, nullptr );
-                SDL_UpdateWindowSurface( m_window );
-            }
-
-            if ( event.type == SDL_KEYUP )
-            {
-                switch ( event.key.keysym.sym )
-                {
-                    case SDLK_UP:
-                    case SDLK_DOWN:
-                    case SDLK_LEFT:
-                    case SDLK_RIGHT:
-                        m_currentSurface = m_keyPressSurfaces[ KEY_PRESS_SURFACE_DEFAULT ];
-                    break;
-                }
-
-                SDL_BlitSurface( m_currentSurface, nullptr, m_screenSurface, nullptr );
-                SDL_UpdateWindowSurface( m_window );
-            }
         }
+
+            //Apply the image stretched
+            SDL_Rect stretchRect;
+            stretchRect.x = 0;
+            stretchRect.y = 0;
+            stretchRect.w = m_width;
+            stretchRect.h = m_height;
+            SDL_BlitScaled( m_image, NULL, m_screenSurface, &stretchRect );    
+
+            SDL_UpdateWindowSurface( m_window );
     }    
+}
+
+SDL_Surface* loadSurface( const char* path, SDL_PixelFormat* format )
+{
+    SDL_Surface* raw_image = SDL_LoadBMP( path );
+    if ( !raw_image )
+    {
+        std::stringstream ss;
+        ss << "Unable to load image " << path << "! SDL Error: " << SDL_GetError();        
+        throw std::runtime_error( ss.str() );
+    }
+
+    SDL_Surface* optimized_surface = SDL_ConvertSurface( raw_image, format, 0 );
+    SDL_FreeSurface( raw_image );
+    if ( !optimized_surface )
+    {        
+        std::stringstream ss;
+        ss << "Unable to optimize image " << path << "! SDL Error: " << SDL_GetError();        
+        throw std::runtime_error( ss.str() );
+    }
+
+    return optimized_surface;
 }
 
 void ShowErrorMessageBox(const char* title, const char* message)

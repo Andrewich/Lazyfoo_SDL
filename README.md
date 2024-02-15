@@ -16,6 +16,7 @@ Links
 -----
 
 - https://lazyfoo.net/tutorials/SDL/
+- https://dev.to/noah11012/using-sdl2-viewports-dgn
 - https://docs.conan.io/2.0/tutorial/consuming_packages/different_configurations.html
 - https://docs.conan.io/2.0/tutorial/consuming_packages/use_tools_as_conan_packages.html
 - https://blog.conan.io/2023/07/20/introduction-to-game-dev-with-sdl2.html

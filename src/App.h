@@ -5,6 +5,7 @@
 
 struct SDL_Window;
 struct SDL_Surface;
+struct SDL_PixelFormat;
 
 namespace lazyfoo 
 {
@@ -34,15 +35,9 @@ private:
     int m_width;
     int m_height;
 
-    //Current displayed image
-    SDL_Surface* m_currentSurface;
-    //The images that correspond to a keypress    
-    std::array<SDL_Surface*, KEY_PRESS_SURFACE_TOTAL> m_keyPressSurfaces;    
-
-    SDL_Surface* loadSurface( const char* path );
-    void loadMedia();
 };
 
+SDL_Surface* loadSurface( const char* path, SDL_PixelFormat* format );
 void ShowErrorMessageBox(const char* title, const char* message);
 
 } // namespace lazyfoo
