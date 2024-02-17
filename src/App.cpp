@@ -1,6 +1,7 @@
 #include "App.h"
 
 #include <SDL.h>
+#include <SDL_image.h>
 
 #include <stdexcept>
 #include <sstream>
@@ -28,9 +29,16 @@ App::App( const char *title, const int width, const int height )
         throw std::runtime_error( ss.str() );
     }
 
+    if ( !( IMG_Init( IMG_INIT_PNG ) & IMG_INIT_PNG ) )
+    {
+        std::stringstream ss;
+        ss << "SDL_image could not initialize! SDL_image Error: " << IMG_GetError();        
+        throw std::runtime_error( ss.str() );
+    }
+
     m_screenSurface = SDL_GetWindowSurface( m_window );    
 
-    m_image = loadSurface( "../../assets/stretch.bmp", m_screenSurface->format );
+    m_image = loadSurface( "../../assets/loaded.png", m_screenSurface->format );
 }
 
 App::~App()
@@ -66,11 +74,11 @@ void App::run()
 
 SDL_Surface* loadSurface( const char* path, SDL_PixelFormat* format )
 {
-    SDL_Surface* raw_image = SDL_LoadBMP( path );
+    SDL_Surface* raw_image = IMG_Load( path );
     if ( !raw_image )
     {
         std::stringstream ss;
-        ss << "Unable to load image " << path << "! SDL Error: " << SDL_GetError();        
+        ss << "Unable to load image " << path << "! SDL_image Error: " << IMG_GetError();        
         throw std::runtime_error( ss.str() );
     }
 
