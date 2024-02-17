@@ -10,7 +10,7 @@ namespace lazyfoo
 {
 
 App::App( const char *title, const int width, const int height )
-    : m_window(nullptr), m_screenSurface(nullptr),
+    : m_window(nullptr), m_renderer(nullptr), m_texture(nullptr),
       m_width(width), m_height(height)
 {
     if ( SDL_Init( SDL_INIT_VIDEO ) < 0 )
@@ -29,22 +29,32 @@ App::App( const char *title, const int width, const int height )
         throw std::runtime_error( ss.str() );
     }
 
+    m_renderer = SDL_CreateRenderer( m_window, -1, SDL_RENDERER_ACCELERATED );
+    if ( !m_renderer )
+    {
+        std::stringstream ss;
+        ss << "Renderer could not be created! SDL Error: " << SDL_GetError();        
+        throw std::runtime_error( ss.str() );
+    }
+
+    SDL_SetRenderDrawColor( m_renderer, 0xFF, 0xFF, 0xFF, 0xFF );
+
     if ( !( IMG_Init( IMG_INIT_PNG ) & IMG_INIT_PNG ) )
     {
         std::stringstream ss;
         ss << "SDL_image could not initialize! SDL_image Error: " << IMG_GetError();        
         throw std::runtime_error( ss.str() );
-    }
+    }    
 
-    m_screenSurface = SDL_GetWindowSurface( m_window );    
-
-    m_image = loadSurface( "../../assets/loaded.png", m_screenSurface->format );
+    m_texture = loadTexture( "../../assets/texture.png", m_renderer );
 }
 
 App::~App()
 {    
-    SDL_FreeSurface( m_image );    
+    SDL_DestroyTexture( m_texture );
+    SDL_DestroyRenderer( m_renderer );
     SDL_DestroyWindow( m_window );
+    IMG_Quit();
     SDL_Quit();
 }
 
@@ -58,40 +68,25 @@ void App::run()
         {
             if ( (event.type == SDL_QUIT) || ( event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE ) )
                 quit = true;
-        }
+        }            
 
-            //Apply the image stretched
-            SDL_Rect stretchRect;
-            stretchRect.x = 0;
-            stretchRect.y = 0;
-            stretchRect.w = m_width;
-            stretchRect.h = m_height;
-            SDL_BlitScaled( m_image, NULL, m_screenSurface, &stretchRect );    
-
-            SDL_UpdateWindowSurface( m_window );
-    }    
+        SDL_RenderClear( m_renderer );
+        SDL_RenderCopy( m_renderer, m_texture, nullptr, nullptr );
+        SDL_RenderPresent( m_renderer );
+    }
 }
 
-SDL_Surface* loadSurface( const char* path, SDL_PixelFormat* format )
+SDL_Texture* loadTexture( const char* path, SDL_Renderer* renderer )
 {
-    SDL_Surface* raw_image = IMG_Load( path );
-    if ( !raw_image )
-    {
-        std::stringstream ss;
-        ss << "Unable to load image " << path << "! SDL_image Error: " << IMG_GetError();        
-        throw std::runtime_error( ss.str() );
-    }
-
-    SDL_Surface* optimized_surface = SDL_ConvertSurface( raw_image, format, 0 );
-    SDL_FreeSurface( raw_image );
-    if ( !optimized_surface )
+    SDL_Texture* texture = IMG_LoadTexture( renderer, path );        
+    if ( !texture )
     {        
         std::stringstream ss;
-        ss << "Unable to optimize image " << path << "! SDL Error: " << SDL_GetError();        
+        ss << "Unable to create texture from " << path << "! SDL Error: " << SDL_GetError();        
         throw std::runtime_error( ss.str() );
     }
 
-    return optimized_surface;
+    return texture;
 }
 
 void ShowErrorMessageBox(const char* title, const char* message)
