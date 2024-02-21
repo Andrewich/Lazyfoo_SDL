@@ -2,11 +2,12 @@
 #define APP_H_
 
 struct SDL_Window;
-struct SDL_Texture;
 struct SDL_Renderer;
 
 namespace lazyfoo 
 {
+
+struct Texture;
 
 class App {
 public:
@@ -16,15 +17,14 @@ public:
     void run();
 private:
     SDL_Window*  m_window;
-    SDL_Renderer* m_renderer;    
-    SDL_Texture* m_texture;
+    SDL_Renderer* m_renderer;
+    Texture* m_foo;
+    Texture* m_background;
 
     int m_width;
     int m_height;
-
 };
 
-SDL_Texture* loadTexture(const char* path, SDL_Renderer* renderer);
 void ShowErrorMessageBox(const char* title, const char* message);
 
 } // namespace lazyfoo

@@ -5,6 +5,8 @@ find_package(SDL2 REQUIRED CONFIG)
 find_package(SDL2_image REQUIRED CONFIG)
 
 add_executable(${PROJECT_NAME} 
+                    src/Texture.h
+                    src/Texture.cpp
                     src/App.h
                     src/App.cpp
                     src/main.cpp)

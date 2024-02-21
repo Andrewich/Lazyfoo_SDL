@@ -1,4 +1,5 @@
 #include "App.h"
+#include "Texture.h"
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -10,7 +11,8 @@ namespace lazyfoo
 {
 
 App::App( const char *title, const int width, const int height )
-    : m_window(nullptr), m_renderer(nullptr), m_texture(nullptr),
+    : m_window(nullptr), m_renderer(nullptr), 
+      m_foo(new Texture()), m_background(new Texture()),
       m_width(width), m_height(height)
 {
     if ( SDL_Init( SDL_INIT_VIDEO ) < 0 )
@@ -22,7 +24,7 @@ App::App( const char *title, const int width, const int height )
 
     m_window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED, m_width, height, SDL_WINDOW_SHOWN);
-    if ( !m_window )
+    if ( m_window == NULL )
     {
         std::stringstream ss;
         ss << "Window could not by created! SDL_Error: " << SDL_GetError();        
@@ -30,7 +32,7 @@ App::App( const char *title, const int width, const int height )
     }
 
     m_renderer = SDL_CreateRenderer( m_window, -1, SDL_RENDERER_ACCELERATED );
-    if ( !m_renderer )
+    if ( m_renderer == NULL )
     {
         std::stringstream ss;
         ss << "Renderer could not be created! SDL Error: " << SDL_GetError();        
@@ -44,14 +46,16 @@ App::App( const char *title, const int width, const int height )
         std::stringstream ss;
         ss << "SDL_image could not initialize! SDL_image Error: " << IMG_GetError();        
         throw std::runtime_error( ss.str() );
-    }    
+    }
 
-    m_texture = loadTexture( "../../assets/texture.png", m_renderer );
+    m_foo->loadFromFile( "../../assets/foo.png", m_renderer );
+    m_background->loadFromFile( "../../assets/background.png", m_renderer );
 }
 
 App::~App()
-{    
-    SDL_DestroyTexture( m_texture );
+{
+    delete m_background;
+    delete m_foo;
     SDL_DestroyRenderer( m_renderer );
     SDL_DestroyWindow( m_window );
     IMG_Quit();
@@ -71,22 +75,10 @@ void App::run()
         }            
 
         SDL_RenderClear( m_renderer );
-        SDL_RenderCopy( m_renderer, m_texture, nullptr, nullptr );
+        m_background->render( 0, 0 );
+        m_foo->render( 240, 190 );
         SDL_RenderPresent( m_renderer );
     }
-}
-
-SDL_Texture* loadTexture( const char* path, SDL_Renderer* renderer )
-{
-    SDL_Texture* texture = IMG_LoadTexture( renderer, path );        
-    if ( !texture )
-    {        
-        std::stringstream ss;
-        ss << "Unable to create texture from " << path << "! SDL Error: " << SDL_GetError();        
-        throw std::runtime_error( ss.str() );
-    }
-
-    return texture;
 }
 
 void ShowErrorMessageBox(const char* title, const char* message)
